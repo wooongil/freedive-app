@@ -269,7 +269,7 @@ message = f"""▶ 신청레벨
 오시는 방법 {loc.get('링크','')}"""
 
 # 올림픽수영장 잠수풀만 주의사항 추가
-if loc_name == "올림픽수영장 잠수풀" and not theory_class:
+if loc_name == "올림픽수영장 잠수풀"
     message += f"""
 주의사항: {loc.get('주의','')}"""
 
@@ -306,6 +306,7 @@ edited_message = st.text_area("아래 내용을 수정하거나 복사해서 사
 
 # 수정된 내용으로 코드 블록 표시
 st.code(edited_message, language="")
+
 
 
 
