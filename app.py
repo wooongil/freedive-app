@@ -36,7 +36,7 @@ LOCATIONS = {
         "주소": "인천 연수구 인천신항대로892번길 40 인천환경공단 송도스포츠파크",
         "링크": "https://ssp.eco-i.or.kr/sub/contents/default_page.asp?mNo=MA070000000",
         "입장료_평일": 5000,
-        "입장료_주말": 18000,
+        "입장료_주말": 5000,
         "주의": "국립 운영(주말 수업 어려움), 동시입장 필요",
         "멘트": "송도 잠수풀 로비에서 강사님을 만나시면 됩니다."
     },
@@ -105,11 +105,11 @@ st.caption("드롭다운 선택 → 자동으로 안내문 완성 → 복사/다
 col1, col2 = st.columns(2)
 with col1:
     course = st.selectbox("신청 레벨(과정)", options=list(COURSES.keys()))
-    instr = st.selectbox("강사명", options=INSTRUCTORS)
+    # 강사명 입력 제거
 with col2:
     loc_name = st.selectbox("교육 장소", options=list(LOCATIONS.keys()))
     dt_date = st.date_input("교육 날짜", value=date.today())
-    dt_time = st.time_input("교육 시간", value=time(15, 0))
+    time_input = st.text_input("교육 시간", value="15:00", placeholder="예) 15:00, 09:30")
 
 name = st.text_input("교육생 이름(선택)", placeholder="예) 홍길동")
 
@@ -120,15 +120,28 @@ course_meta = COURSES.get(course, {})
 # 한국 형식 날짜/시간 (Windows 호환)
 weekday_kr = ["월", "화", "수", "목", "금", "토", "일"]
 dow = weekday_kr[dt_date.weekday()]
-time_str = dt_time.strftime("%H:%M")
+
+# 시간 입력 처리
+try:
+    # 입력된 시간을 파싱 (HH:MM 형식)
+    time_parts = time_input.split(":")
+    if len(time_parts) == 2:
+        hour = int(time_parts[0])
+        minute = int(time_parts[1])
+        time_str = f"{hour:02d}:{minute:02d}"
+    else:
+        time_str = time_input  # 파싱 실패시 원본 사용
+except:
+    time_str = time_input  # 오류시 원본 사용
+
 date_kr = f"{dt_date.month}월 {dt_date.day}일"
 
-# 유효기간 자동 계산 (일수 기반)
+# 유효기간 자동 계산 (일수 기반) - 종료일만 표시
 유효기간_일 = course_meta.get("유효기간_일", 0)
 if 유효기간_일 > 0:
     만료일 = dt_date + timedelta(days=유효기간_일)
     만료일_str = f"{만료일.month}월 {만료일.day}일"
-    유효기간_표시 = f"교육소진유효기간: {dt_date.month}월 {dt_date.day}일 ~ {만료일_str}"
+    유효기간_표시 = f"교육소진유효기간: {만료일_str}"  # 시작일 제거, 종료일만
 else:
     유효기간_표시 = ""
 
@@ -170,37 +183,46 @@ message = f"""▶ 신청레벨
 
 ▶ 교육장소
 {loc_name} ({loc.get('주소','')})
-오시는 방법 {loc.get('링크','')}
+오시는 방법 {loc.get('링크','')}"""
+
+# 올림픽수영장 잠수풀만 주의사항 추가
+if loc_name == "올림픽수영장 잠수풀":
+    message += f"""
+주의사항: {loc.get('주의','')}"""
+
+message += f"""
 
 ▶ 준비물
 - {custom_items}
 - 입장료 {fee_str} (수업 후 안내)
 
 ▶ 강사 연락처
-교육강사: {instr}
+교육강사 연락처는 교육 전 안내드립니다.
 대표번호 블루페블 02-6278-7787
 {name_line}
 
 📍 안내멘트
 {date_kr}({dow}) {time_str}에 {loc.get('멘트','')}
-주의사항: {loc.get('주의','')}
-"""
+궁금하신 점은 언제든 문의주세요😃"""
 
 if add_extra.strip():
-    message += f"\n추가 안내: {add_extra.strip()}\n"
+    message += f"\n\n추가 안내: {add_extra.strip()}"
 
 # ---- 출력 UI ---------------------------------------------------------------
 st.subheader("생성된 안내문")
-st.text_area("아래 내용 통째로 복사해서 보내면 됩니다.", value=message, height=360)
-st.code(message, language="")  # 복사 버튼 제공
+# 수정 가능한 text_area로 변경
+edited_message = st.text_area("아래 내용을 수정하거나 복사해서 사용하세요", value=message, height=360)
 
-# 다운로드 버튼 (txt)
+# 수정된 내용으로 다운로드
 st.download_button(
     label="안내문 .txt 다운로드",
-    data=message.encode("utf-8"),
+    data=edited_message.encode("utf-8"),
     file_name=f"안내문_{dt_date.isoformat()}_{loc_name}.txt",
     mime="text/plain"
 )
+
+# 수정된 내용으로 코드 블록 표시
+st.code(edited_message, language="")
 
 # 미리보기 카드
 with st.expander("장소 상세 미리보기"):
