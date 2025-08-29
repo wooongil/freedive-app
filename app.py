@@ -1,5 +1,5 @@
 import streamlit as st
-from datetime import time, date, timedelta
+from datetime import time, date, timedelta, datetime  # datetime 추가
 
 st.set_page_config(page_title="교육 안내문 생성기", page_icon=":mailbox_with_mail:", layout="centered")
 
@@ -131,7 +131,6 @@ with col9:
 loc = LOCATIONS.get(loc_name, {})
 course_meta = COURSES.get(course, {})
 
-# 한국 형식 날짜/시간
 weekday_kr = ["월", "화", "수", "목", "금", "토", "일"]
 dow = weekday_kr[dt_date.weekday()]
 
@@ -147,113 +146,78 @@ def convert_to_24hr(hour, ampm):
 def calculate_arrival_time(hour, minute, ampm):
     arrival_hour = hour
     arrival_minute = minute - 10
-    
     if arrival_minute < 0:
         arrival_hour -= 1
         arrival_minute += 60
-    
     if arrival_hour <= 0:
         arrival_hour = 12
         ampm = "AM" if ampm == "PM" else "PM"
-    
     return f"{arrival_hour:02d}:{arrival_minute:02d} {ampm}"
 
 def format_time_range(hour, minute, ampm, end_hour, end_minute, end_ampm):
     return f"{ampm} {hour:02d}:{minute:02d} ~ {end_ampm} {end_hour:02d}:{end_minute:02d}"
 
-# 잠수풀 수업 시간 계산
+# 잠수풀 시간 계산
 pool_hour = convert_to_24hr(time_hour, time_ampm)
-time_str = f"{time_hour:02d}:{time_minute:02d} {time_ampm}"
-
 end_hour_24 = (pool_hour + 3) % 24
 if end_hour_24 == 0:
-    end_hour = 12
-    end_ampm = "AM"
+    end_hour, end_ampm = 12, "AM"
 elif end_hour_24 > 12:
-    end_hour = end_hour_24 - 12
-    end_ampm = "PM"
+    end_hour, end_ampm = end_hour_24 - 12, "PM"
 else:
-    end_hour = end_hour_24
-    end_ampm = "AM"
-
-end_time_str = f"{end_hour:02d}:{time_minute:02d} {end_ampm}"
+    end_hour, end_ampm = end_hour_24, "AM"
 
 # 이론수업 시간 계산
 theory_hour_24 = convert_to_24hr(theory_hour, theory_ampm)
-theory_time_str = f"{theory_hour:02d}:{theory_minute:02d} {theory_ampm}"
-
 theory_end_hour_24 = (theory_hour_24 + 2) % 24
 if theory_end_hour_24 == 0:
-    theory_end_hour = 12
-    theory_end_ampm = "AM"
+    theory_end_hour, theory_end_ampm = 12, "AM"
 elif theory_end_hour_24 > 12:
-    theory_end_hour = theory_end_hour_24 - 12
-    theory_end_ampm = "PM"
+    theory_end_hour, theory_end_ampm = theory_end_hour_24 - 12, "PM"
 else:
-    theory_end_hour = theory_end_hour_24
-    theory_end_ampm = "AM"
-
-theory_end_time_str = f"{theory_end_hour:02d}:{theory_minute:02d} {theory_end_ampm}"
+    theory_end_hour, theory_end_ampm = theory_end_hour_24, "AM"
 
 date_kr = f"{dt_date.month}월 {dt_date.day}일"
 
-# 유효기간 계산
+# 유효기간
 유효기간_일 = course_meta.get("유효기간_일", 0)
 if 유효기간_일 > 0:
     만료일 = dt_date + timedelta(days=유효기간_일)
-    만료일_str = f"{만료일.month}월 {만료일.day}일"
-    유효기간_표시 = f"교육소진유효기간: {만료일_str}"
+    유효기간_표시 = f"교육소진유효기간: {만료일.month}월 {만료일.day}일"
 else:
     유효기간_표시 = ""
 
-# 평일/주말 구분
+# 평일/주말 입장료
 is_weekend = dow in ["토", "일"]
-if is_weekend:
-    fee = loc.get("입장료_주말", 0)
-    fee_type = "주말"
-else:
-    fee = loc.get("입장료_평일", 0)
-    fee_type = "평일"
+fee = loc.get("입장료_주말" if is_weekend else "입장료_평일", 0)
+fee_type = "주말" if is_weekend else "평일"
+fee_str = f"{fee:,}원 ({fee_type})" if fee else "현장 안내"
 
-# 보기용 구성/유효기간
+# 과정 상세
 course_line = ""
 if show_details:
     g = course_meta.get("구성", "")
-    parts = []
-    if g:
-        parts.append(f"{g}")
-    if 유효기간_표시:
-        parts.append(유효기간_표시)
+    parts = [p for p in [g, 유효기간_표시] if p]
     if parts:
         course_line = f"({', '.join(parts)})"
 
-# 금액 처리
-fee_str = f"{fee:,}원 ({fee_type})" if isinstance(fee, (int, float)) and fee > 0 else "현장 안내"
+# ---- 교육 스케줄 생성 (시간순 + 2줄 형식) ------------------------
+events = []
+pool_start_dt = datetime(dt_date.year, dt_date.month, dt_date.day, pool_hour, time_minute)
+pool_item = f"- 잠수풀 수업\n{date_kr}({dow}) {format_time_range(time_hour, time_minute, time_ampm, end_hour, time_minute, end_ampm)}"
+events.append((pool_start_dt, pool_item))
 
-# 교육 스케줄 생성 (날짜 순서로 정렬)
-schedule_lines = []
 if theory_class:
     theory_weekday = weekday_kr[theory_date.weekday()]
     theory_date_kr = f"{theory_date.month}월 {theory_date.day}일"
-    
-    if theory_date <= dt_date:
-        # 이론수업이 먼저인 경우
-        schedule_lines = [
-            f"- 이론수업 {theory_date_kr}({theory_weekday}) {format_time_range(theory_hour, theory_minute, theory_ampm, theory_end_hour, theory_minute, theory_end_ampm)} ",
-            f"- 잠수풀 수업 {date_kr}({dow}) {format_time_range(time_hour, time_minute, time_ampm, end_hour, time_minute, end_ampm)}"
-        ]
-    else:
-        # 잠수풀 수업이 먼저인 경우
-        schedule_lines = [
-            f"- 잠수풀 수업 {date_kr}({dow}) {format_time_range(time_hour, time_minute, time_ampm, end_hour, time_minute, end_ampm)}",
-            f"- 온라인이론수업 {theory_date_kr}({theory_weekday}) {format_time_range(theory_hour, theory_minute, theory_ampm, theory_end_hour, theory_minute, theory_end_ampm)} "
-        ]
-else:
-    schedule_lines.append(f"- 잠수풀 수업 {date_kr}({dow}) {format_time_range(time_hour, time_minute, time_ampm, end_hour, time_minute, end_ampm)}")
+    theory_start_dt = datetime(theory_date.year, theory_date.month, theory_date.day, theory_hour_24, theory_minute)
+    theory_item = f"- 이론수업\n{theory_date_kr}({theory_weekday}) {format_time_range(theory_hour, theory_minute, theory_ampm, theory_end_hour, theory_minute, theory_end_ampm)}"
+    events.append((theory_start_dt, theory_item))
 
-schedule_text = "\n".join(schedule_lines)
+events.sort(key=lambda x: x[0])
+schedule_text = "\n\n".join(item for _, item in events)
 
-# 도착 시간 계산 (10분 전)
+# 도착 시간
 arrival_time = calculate_arrival_time(time_hour, time_minute, time_ampm)
 
 # ---- 안내문 생성 ------------------------------------------------------------
@@ -268,7 +232,6 @@ message = f"""▶ 신청레벨
 {loc_name} ({loc.get('주소','')})
 오시는 방법 {loc.get('링크','')}"""
 
-# ✅ 수정 부분: 이론수업 여부와 상관없이 항상 주의사항 출력
 if loc_name == "올림픽수영장 잠수풀":
     message += f"""
 주의사항: {loc.get('주의','')}"""
@@ -278,7 +241,6 @@ message += f"""
 ▶ 준비물
 - {custom_items}"""
 
-# 이론수업이 아닌 경우에만 입장료 표시
 if not theory_class:
     message += f"""
 - 입장료 {fee_str} (수업 후 안내)"""
@@ -300,9 +262,5 @@ if add_extra.strip():
 
 # ---- 출력 UI ---------------------------------------------------------------
 st.subheader("생성된 안내문")
-
-# 수정 가능한 text_area
 edited_message = st.text_area("아래 내용을 수정하거나 복사해서 사용하세요:", value=message, height=360)
-
-# 수정된 내용으로 코드 블록 표시
 st.code(edited_message, language="")
