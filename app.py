@@ -194,7 +194,7 @@ message += f"""
 
 ▶ 준비물
 - {custom_items}
-- 입장료 {fee_str} (수업 후 안내)
+- 입장료 {fee_str}
 
 ▶ 강사 연락처
 교육강사 연락처는 교육 전 안내드립니다.
@@ -229,5 +229,6 @@ with st.expander("장소 상세 미리보기"):
     st.markdown(f"**링크**: {loc.get('링크','')}")
     st.markdown(f"**입장료**: {fee_str}")
     st.markdown(f"**주의사항**: {loc.get('주의','')}")
+
 
 
