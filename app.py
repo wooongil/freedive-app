@@ -191,7 +191,6 @@ st.download_button(
     label="안내문 .txt 다운로드",
     data=message.encode("utf-8"),
     file_name=f"안내문_{dt_date.isoformat()}_{loc_name}.txt",
-    file_name=f"안내문_{dt_date.isoformat()}_{loc_name}.txt",
     mime="text/plain"
 )
 
@@ -201,3 +200,4 @@ with st.expander("장소 상세 미리보기"):
     st.markdown(f"**링크**: {loc.get('링크','')}")
     st.markdown(f"**입장료**: {fee_str}")
     st.markdown(f"**주의사항**: {loc.get('주의','')}")
+
