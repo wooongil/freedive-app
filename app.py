@@ -179,7 +179,7 @@ message = f"""▶ 신청레벨
 
 ▶ 교육스케줄
 - {date_kr}({dow})
-잠수풀/이론 수업 {time_str}
+잠수풀 수업 {time_str}
 
 ▶ 교육장소
 {loc_name} ({loc.get('주소','')})
@@ -230,6 +230,7 @@ with st.expander("장소 상세 미리보기"):
     st.markdown(f"**링크**: {loc.get('링크','')}")
     st.markdown(f"**입장료**: {fee_str}")
     st.markdown(f"**주의사항**: {loc.get('주의','')}")
+
 
 
 
