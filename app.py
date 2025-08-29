@@ -239,14 +239,14 @@ if theory_class:
     if theory_date <= dt_date:
         # 이론수업이 먼저인 경우
         schedule_lines = [
-            f"- 이론수업 {theory_date_kr}({theory_weekday}) {format_time_range(theory_hour, theory_minute, theory_ampm, theory_end_hour, theory_minute, theory_end_ampm)} (자택/Zoom)",
+            f"- 이론수업 {theory_date_kr}({theory_weekday}) {format_time_range(theory_hour, theory_minute, theory_ampm, theory_end_hour, theory_minute, theory_end_ampm)} ",
             f"- 잠수풀 수업 {date_kr}({dow}) {format_time_range(time_hour, time_minute, time_ampm, end_hour, time_minute, end_ampm)}"
         ]
     else:
         # 잠수풀 수업이 먼저인 경우
         schedule_lines = [
             f"- 잠수풀 수업 {date_kr}({dow}) {format_time_range(time_hour, time_minute, time_ampm, end_hour, time_minute, end_ampm)}",
-            f"- 이론수업 {theory_date_kr}({theory_weekday}) {format_time_range(theory_hour, theory_minute, theory_ampm, theory_end_hour, theory_minute, theory_end_ampm)} (자택/Zoom)"
+            f"- 이론수업 {theory_date_kr}({theory_weekday}) {format_time_range(theory_hour, theory_minute, theory_ampm, theory_end_hour, theory_minute, theory_end_ampm)} "
         ]
 else:
     schedule_lines.append(f"- 잠수풀 수업 {date_kr}({dow}) {format_time_range(time_hour, time_minute, time_ampm, end_hour, time_minute, end_ampm)}")
@@ -306,6 +306,7 @@ edited_message = st.text_area("아래 내용을 수정하거나 복사해서 사
 
 # 수정된 내용으로 코드 블록 표시
 st.code(edited_message, language="")
+
 
 
 
