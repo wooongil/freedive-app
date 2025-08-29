@@ -243,7 +243,7 @@ message += f"""
 
 if not theory_class:
     message += f"""
-- 입장료 {fee_str} (수업 후 안내)"""
+- 입장료 {fee_str}"""
 
 message += f"""
 
@@ -264,4 +264,5 @@ if add_extra.strip():
 st.subheader("생성된 안내문")
 edited_message = st.text_area("아래 내용을 수정하거나 복사해서 사용하세요:", value=message, height=360)
 st.code(edited_message, language="")
+
 
