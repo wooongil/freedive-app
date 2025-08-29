@@ -234,4 +234,75 @@ fee_str = f"{fee:,}원 ({fee_type})" if isinstance(fee, (int, float)) and fee > 
 schedule_lines = []
 if theory_class:
     theory_weekday = weekday_kr[theory_date.weekday()]
-    theory_date_kr = f"{theory_date.month}월 {theory_date
+    theory_date_kr = f"{theory_date.month}월 {theory_date.day}일"
+    
+    if theory_date <= dt_date:
+        # 이론수업이 먼저인 경우
+        schedule_lines = [
+            f"- 이론수업 {theory_date_kr}({theory_weekday}) {format_time_range(theory_hour, theory_minute, theory_ampm, theory_end_hour, theory_minute, theory_end_ampm)} ",
+            f"- 잠수풀 수업 {date_kr}({dow}) {format_time_range(time_hour, time_minute, time_ampm, end_hour, time_minute, end_ampm)}"
+        ]
+    else:
+        # 잠수풀 수업이 먼저인 경우
+        schedule_lines = [
+            f"- 잠수풀 수업 {date_kr}({dow}) {format_time_range(time_hour, time_minute, time_ampm, end_hour, time_minute, end_ampm)}",
+            f"- 온라인이론수업 {theory_date_kr}({theory_weekday}) {format_time_range(theory_hour, theory_minute, theory_ampm, theory_end_hour, theory_minute, theory_end_ampm)} "
+        ]
+else:
+    schedule_lines.append(f"- 잠수풀 수업 {date_kr}({dow}) {format_time_range(time_hour, time_minute, time_ampm, end_hour, time_minute, end_ampm)}")
+
+schedule_text = "\n".join(schedule_lines)
+
+# 도착 시간 계산 (10분 전)
+arrival_time = calculate_arrival_time(time_hour, time_minute, time_ampm)
+
+# ---- 안내문 생성 ------------------------------------------------------------
+message = f"""▶ 신청레벨
+- {course}
+{course_line}
+
+▶ 교육스케줄
+{schedule_text}
+
+▶ 교육장소
+{loc_name} ({loc.get('주소','')})
+오시는 방법 {loc.get('링크','')}"""
+
+# ✅ 수정 부분: 이론수업 여부와 상관없이 항상 주의사항 출력
+if loc_name == "올림픽수영장 잠수풀":
+    message += f"""
+주의사항: {loc.get('주의','')}"""
+
+message += f"""
+
+▶ 준비물
+- {custom_items}"""
+
+# 이론수업이 아닌 경우에만 입장료 표시
+if not theory_class:
+    message += f"""
+- 입장료 {fee_str} (수업 후 안내)"""
+
+message += f"""
+
+▶ 강사 연락처
+교육강사 연락처는 교육 전 안내드립니다.
+대표번호 블루페블 02-6278-7787
+
+{date_kr}({dow}) {arrival_time}까지 {loc.get('멘트','')}
+궁금하신 점은 언제든 문의주세요"""
+
+if add_extra.strip():
+    message += f"""
+
+▶ 추가 안내
+{add_extra.strip()}"""
+
+# ---- 출력 UI ---------------------------------------------------------------
+st.subheader("생성된 안내문")
+
+# 수정 가능한 text_area
+edited_message = st.text_area("아래 내용을 수정하거나 복사해서 사용하세요:", value=message, height=360)
+
+# 수정된 내용으로 코드 블록 표시
+st.code(edited_message, language="")
