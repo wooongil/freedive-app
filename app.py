@@ -105,11 +105,13 @@ st.caption("드롭다운 선택 → 자동으로 안내문 완성 → 복사/다
 col1, col2 = st.columns(2)
 with col1:
     course = st.selectbox("신청 레벨(과정)", options=list(COURSES.keys()))
-    # 강사명 입력 제거
 with col2:
     loc_name = st.selectbox("교육 장소", options=list(LOCATIONS.keys()))
     dt_date = st.date_input("교육 날짜", value=date.today())
     time_input = st.text_input("교육 시간", value="15:00", placeholder="예) 15:00, 09:30")
+
+# 이론수업 선택
+theory_class = st.checkbox("이론수업 포함", value=False)
 
 name = st.text_input("교육생 이름(선택)", placeholder="예) 홍길동")
 
@@ -121,7 +123,7 @@ course_meta = COURSES.get(course, {})
 weekday_kr = ["월", "화", "수", "목", "금", "토", "일"]
 dow = weekday_kr[dt_date.weekday()]
 
-# 시간 입력 처리
+# 시간 입력 처리 및 종료시간 계산
 try:
     # 입력된 시간을 파싱 (HH:MM 형식)
     time_parts = time_input.split(":")
@@ -129,10 +131,16 @@ try:
         hour = int(time_parts[0])
         minute = int(time_parts[1])
         time_str = f"{hour:02d}:{minute:02d}"
+        
+        # 종료시간 계산 (시작시간 + 3시간)
+        end_hour = (hour + 3) % 24
+        end_time_str = f"{end_hour:02d}:{minute:02d}"
     else:
-        time_str = time_input  # 파싱 실패시 원본 사용
+        time_str = time_input
+        end_time_str = "18:00"  # 기본값
 except:
-    time_str = time_input  # 오류시 원본 사용
+    time_str = time_input
+    end_time_str = "18:00"  # 기본값
 
 date_kr = f"{dt_date.month}월 {dt_date.day}일"
 
@@ -172,6 +180,14 @@ fee_str = f"{fee:,}원 ({fee_type})" if isinstance(fee, (int, float)) and fee > 
 # 수강생 이름 라인
 name_line = f"수강생: {name}" if name.strip() else ""
 
+# 교육 스케줄 생성
+schedule_lines = []
+if theory_class:
+    schedule_lines.append(f"- 이론수업 {time_str}~{end_time_str} (자택/Zoom)")
+schedule_lines.append(f"- 잠수풀 수업 {time_str}~{end_time_str}")
+
+schedule_text = "\n".join(schedule_lines)
+
 # ---- 안내문 생성 ------------------------------------------------------------
 message = f"""▶ 신청레벨
 - {course}
@@ -179,22 +195,32 @@ message = f"""▶ 신청레벨
 
 ▶ 교육스케줄
 - {date_kr}({dow})
-잠수풀 수업 {time_str}
+{schedule_text}"""
+
+# 이론수업이 아닌 경우에만 교육장소 표시
+if not theory_class:
+    message += f"""
 
 ▶ 교육장소
 {loc_name} ({loc.get('주소','')})
 오시는 방법 {loc.get('링크','')}"""
 
 # 올림픽수영장 잠수풀만 주의사항 추가
-if loc_name == "올림픽수영장 잠수풀":
+if loc_name == "올림픽수영장 잠수풀" and not theory_class:
     message += f"""
 주의사항: {loc.get('주의','')}"""
 
 message += f"""
 
 ▶ 준비물
-- {custom_items}
-- 입장료 {fee_str}
+- {custom_items}"""
+
+# 이론수업이 아닌 경우에만 입장료 표시
+if not theory_class:
+    message += f"""
+- 입장료 {fee_str} (수업 후 안내)"""
+
+message += f"""
 
 ▶ 강사 연락처
 교육강사 연락처는 교육 전 안내드립니다.
@@ -230,9 +256,3 @@ with st.expander("장소 상세 미리보기"):
     st.markdown(f"**링크**: {loc.get('링크','')}")
     st.markdown(f"**입장료**: {fee_str}")
     st.markdown(f"**주의사항**: {loc.get('주의','')}")
-
-
-
-
-
-
