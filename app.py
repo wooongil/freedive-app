@@ -109,13 +109,13 @@ with col2:
     loc_name = st.selectbox("교육 장소", options=list(LOCATIONS.keys()))
     dt_date = st.date_input("교육 날짜", value=date.today())
 
-# 시간을 AM/PM으로 선택
+# 시간을 직접 입력으로 변경
 st.subheader("잠수풀 수업 시간")
 col3, col4, col5 = st.columns(3)
 with col3:
-    time_hour = st.selectbox("시간", options=list(range(1, 13)), index=2)  # 3시 = index 2
+    time_hour = st.number_input("시간", min_value=1, max_value=12, value=3)
 with col4:
-    time_minute = st.selectbox("분", options=[0, 15, 30, 45])
+    time_minute = st.number_input("분", min_value=0, max_value=59, value=0)
 with col5:
     time_ampm = st.selectbox("AM/PM", options=["PM", "AM"], index=0)
 
@@ -129,8 +129,8 @@ if theory_class:
     with col6:
         theory_date = st.date_input("이론수업 날짜", value=dt_date)
     with col7:
-        theory_hour = st.selectbox("이론수업 시간", options=list(range(1, 13)), index=6)  # 7시 = index 6
-        theory_minute = st.selectbox("이론수업 분", options=[0, 15, 30, 45])
+        theory_hour = st.number_input("이론수업 시간", min_value=1, max_value=12, value=7)
+        theory_minute = st.number_input("이론수업 분", min_value=0, max_value=59, value=0)
     with col8:
         theory_ampm = st.selectbox("이론수업 AM/PM", options=["PM", "AM"], index=0)
 
@@ -174,6 +174,10 @@ def calculate_arrival_time(hour, minute, ampm):
         ampm = "AM" if ampm == "PM" else "PM"
     
     return f"{arrival_hour:02d}:{arrival_minute:02d} {ampm}"
+
+# 시간 형식 변경 함수
+def format_time_range(hour, minute, ampm, end_hour, end_minute, end_ampm):
+    return f"{ampm} {hour:02d}:{minute:02d} ~ {end_ampm} {end_hour:02d}:{end_minute:02d}"
 
 # 잠수풀 수업 시간
 pool_hour = convert_to_24hr(time_hour, time_ampm)
@@ -250,12 +254,23 @@ fee_str = f"{fee:,}원 ({fee_type})" if isinstance(fee, (int, float)) and fee > 
 # 수강생 이름 라인
 name_line = f"수강생: {name}" if name.strip() else ""
 
-# 교육 스케줄 생성
+# 교육 스케줄 생성 (날짜 순서로 정렬)
 schedule_lines = []
 if theory_class:
-    schedule_lines.append(f"- 이론수업 {theory_date_kr}({theory_weekday}) {theory_time_str}~{theory_end_time_str} (자택/Zoom)")
-
-schedule_lines.append(f"- 잠수풀 수업 {date_kr}({dow}) {time_str}~{end_time_str}")
+    if theory_date <= dt_date:
+        # 이론수업이 먼저인 경우
+        schedule_lines = [
+            f"- 이론수업 {theory_date_kr}({theory_weekday}) {format_time_range(theory_hour, theory_minute, theory_ampm, theory_end_hour, theory_minute, theory_end_ampm)} (자택/Zoom)",
+            f"- 잠수풀 수업 {date_kr}({dow}) {format_time_range(time_hour, time_minute, time_ampm, end_hour, time_minute, end_ampm)}"
+        ]
+    else:
+        # 잠수풀 수업이 먼저인 경우
+        schedule_lines = [
+            f"- 잠수풀 수업 {date_kr}({dow}) {format_time_range(time_hour, time_minute, time_ampm, end_hour, time_minute, end_ampm)}",
+            f"- 이론수업 {theory_date_kr}({theory_weekday}) {format_time_range(theory_hour, theory_minute, theory_ampm, theory_end_hour, theory_minute, theory_end_ampm)} (자택/Zoom)"
+        ]
+else:
+    schedule_lines.append(f"- 잠수풀 수업 {date_kr}({dow}) {format_time_range(time_hour, time_minute, time_ampm, end_hour, time_minute, end_ampm)}")
 
 schedule_text = "\n".join(schedule_lines)
 
@@ -268,7 +283,6 @@ message = f"""▶ 신청레벨
 {course_line}
 
 ▶ 교육스케줄
-- {date_kr}({dow})
 {schedule_text}"""
 
 # 이론수업이 아닌 경우에만 교육장소 표시
