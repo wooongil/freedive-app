@@ -95,7 +95,7 @@ st.title("교육 안내문 생성기")
 st.caption("드롭다운 선택 → 자동으로 안내문 완성 → 복사/다운로드")
 
 # ---- 입력 영역 --------------------------------------------------------------
-st.subheader("잠수풀 수업 시간")
+st.subheader("잠수풀 수업 시각")
 col1, col2 = st.columns(2)
 with col1:
     course = st.selectbox("신청 레벨(과정)", options=list(COURSES.keys()))
@@ -121,7 +121,7 @@ col6, col7, col8, col9 = st.columns(4)
 with col6:
     theory_date = st.date_input("이론수업 날짜", value=dt_date)
 with col7:
-    theory_hour = st.selectbox("이론수업 시간", options=list(range(1, 13)), index=6, key="theory_hour")
+    theory_hour = st.selectbox("이론수업 시각", options=list(range(1, 13)), index=6, key="theory_hour")
 with col8:
     theory_minute = st.selectbox("이론수업 분", options=[0, 15, 30, 45], key="theory_minute")
 with col9:
