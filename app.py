@@ -212,7 +212,7 @@ if theory_class:
     theory_weekday = weekday_kr[theory_date.weekday()]
     theory_date_kr = f"{theory_date.month}월 {theory_date.day}일"
     theory_start_dt = datetime(theory_date.year, theory_date.month, theory_date.day, theory_hour_24, theory_minute)
-    theory_item = f"- 이론수업\n{theory_date_kr}({theory_weekday}) {format_time_range(theory_hour, theory_minute, theory_ampm, theory_end_hour, theory_minute, theory_end_ampm)}"
+    theory_item = f"- 온라인 이론수업\n{theory_date_kr}({theory_weekday}) {format_time_range(theory_hour, theory_minute, theory_ampm, theory_end_hour, theory_minute, theory_end_ampm)}"
     events.append((theory_start_dt, theory_item))
 
 events.sort(key=lambda x: x[0])
@@ -269,6 +269,7 @@ if add_extra.strip():
 st.subheader("생성된 안내문")
 edited_message = st.text_area("아래 내용을 수정하거나 복사해서 사용하세요:", value=message, height=360)
 st.code(edited_message, language="")
+
 
 
 
