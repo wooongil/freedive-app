@@ -106,7 +106,7 @@ with col2:
     # 잠수풀 수업 시간 설정
     col3, col4, col5 = st.columns(3)
     with col3:
-        time_hour = st.selectbox("시간", options=list(range(1, 13)), index=2, key="pool_hour")
+        time_hour = st.selectbox("시각", options=list(range(1, 13)), index=2, key="pool_hour")
     with col4:
         time_minute = st.selectbox("분", options=[0, 15, 30, 45], key="pool_minute")
     with col5:
@@ -268,6 +268,7 @@ if add_extra.strip():
 st.subheader("생성된 안내문")
 edited_message = st.text_area("아래 내용을 수정하거나 복사해서 사용하세요:", value=message, height=360)
 st.code(edited_message, language="")
+
 
 
 
