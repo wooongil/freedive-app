@@ -95,7 +95,7 @@ st.title("교육 안내문 생성기")
 st.caption("드롭다운 선택 → 자동으로 안내문 완성 → 복사/다운로드")
 
 # ---- 입력 영역 --------------------------------------------------------------
-st.subheader("잠수풀 수업 시각")
+st.subheader("잠수풀 수업 설정")
 col1, col2 = st.columns(2)
 with col1:
     course = st.selectbox("신청 레벨(과정)", options=list(COURSES.keys()))
@@ -268,6 +268,7 @@ if add_extra.strip():
 st.subheader("생성된 안내문")
 edited_message = st.text_area("아래 내용을 수정하거나 복사해서 사용하세요:", value=message, height=360)
 st.code(edited_message, language="")
+
 
 
 
