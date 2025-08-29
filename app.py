@@ -21,7 +21,7 @@ LOCATIONS = {
         "링크": "https://cafe.naver.com/bluepebble/620",
         "입장료_평일": 18000,
         "입장료_주말": 22000,
-        "주의": "매우 크고 복잡합니다 꼭! 오시기 전에 링크 확인해주세요",
+        "주의": "매우 크고 복잡합니다. 꼭! 오시기 전에 링크 확인해주세요.",
         "멘트": "올림픽공원 수영장 잠수풀 입구에서 뵙겠습니다."
     },
     "잠실풀": {
@@ -183,7 +183,7 @@ date_kr = f"{dt_date.month}월 {dt_date.day}일"
 유효기간_일 = course_meta.get("유효기간_일", 0)
 if 유효기간_일 > 0:
     만료일 = dt_date + timedelta(days=유효기간_일)
-    유효기간_표시 = f"교육소진유효기간: {만료일.month}월 {만료일.day}일"
+    유효기간_표시 = f"교육소진 유효기간: {만료일.month}월 {만료일.day}일"
 else:
     유효기간_표시 = ""
 
@@ -268,6 +268,7 @@ if add_extra.strip():
 st.subheader("생성된 안내문")
 edited_message = st.text_area("아래 내용을 수정하거나 복사해서 사용하세요:", value=message, height=360)
 st.code(edited_message, language="")
+
 
 
 
