@@ -268,11 +268,9 @@ if add_extra.strip():
 
 # ---- 출력 UI ---------------------------------------------------------------
 st.subheader("생성된 안내문")
-
-# 수정 가능한 text_area (복사/수정 용)
 edited_message = st.text_area("아래 내용을 수정하거나 복사해서 사용하세요:", value=message, height=360)
+st.code(edited_message, language="")
 
-# st.code(edited_message, language="")
 
 
 
