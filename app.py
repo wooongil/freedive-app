@@ -268,8 +268,9 @@ if add_extra.strip():
 
 # ---- 출력 UI ---------------------------------------------------------------
 st.subheader("생성된 안내문")
-edited_message = st.text_area("아래 내용을 수정하거나 복사해서 사용하세요. ctrl+enter 키를 같이 눌러야 반영됩니다.", value=message, height=360)
+edited_message = st.text_area("완성된 내용을 수정할 수 있습니다. *수정 후 ctrl+enter", value=message, height=360)
 st.code(edited_message, language="")
+
 
 
 
