@@ -82,74 +82,63 @@ LOCATIONS = {
     },
 }
 
-INSTRUCTORS = [
-    "김혜진", "함현석", "이주희", "신가은", "박주흠",
-    "노진아", "선동진", "이동규", "차진명", "김민현",
-    "조아라", "육소영", "노진아", "주선형", "김동희",
-    "표정승"
-]
-
 DEFAULT_ITEMS = "수영복, 수영모, 수건, 세면도구"
 
 # ---- 사이드바 --------------------------------------------------------------
 with st.sidebar:
-    st.header("옵션")
-    show_details = st.checkbox("과정 구성/유효기간 문구 포함", value=True)
-    custom_items = st.text_input("기본 준비물(수정 가능)", value=DEFAULT_ITEMS)
-    add_extra = st.text_area("추가 안내문(선택)", placeholder="예) 신분증 지참, 동시입장 필요 등")
+    st.header("📋 옵션 설정")
+    show_details = st.checkbox("과정 구성/유효기간 표시", value=True, help="안내문에 과정 구성과 유효기간을 포함합니다")
+    custom_items = st.text_input("기본 준비물", value=DEFAULT_ITEMS, help="수정 가능한 기본 준비물 목록")
+    
+    st.header("📝 추가 안내")
+    add_extra = st.text_area("추가 안내사항", placeholder="예) 신분증 지참, 동시입장 필요 등", height=100)
 
-st.title("교육 안내문 생성기")
+st.title("��‍♂️ 교육 안내문 생성기")
 st.caption("드롭다운 선택 → 자동으로 안내문 완성 → 복사/다운로드")
 
 # ---- 입력 영역 --------------------------------------------------------------
+st.subheader("📚 기본 교육 정보")
 col1, col2 = st.columns(2)
 with col1:
-    course = st.selectbox("신청 레벨(과정)", options=list(COURSES.keys()))
+    course = st.selectbox("신청 레벨(과정)", options=list(COURSES.keys()), help="수강할 교육 과정을 선택하세요")
+    loc_name = st.selectbox("교육 장소", options=list(LOCATIONS.keys()), help="교육이 진행될 장소를 선택하세요")
 with col2:
-    loc_name = st.selectbox("교육 장소", options=list(LOCATIONS.keys()))
-    dt_date = st.date_input("교육 날짜", value=date.today())
+    dt_date = st.date_input("교육 날짜", value=date.today(), help="교육이 진행될 날짜를 선택하세요")
+    
+    # 잠수풀 수업 시간 설정
+    st.write("**잠수풀 수업 시간**")
+    col3, col4, col5 = st.columns(3)
+    with col3:
+        time_hour = st.selectbox("시간", options=list(range(1, 13)), index=2, key="pool_hour")
+    with col4:
+        time_minute = st.selectbox("분", options=[0, 15, 30, 45], key="pool_minute")
+    with col5:
+        time_ampm = st.selectbox("AM/PM", options=["PM", "AM"], index=0, key="pool_ampm")
 
-# 시간을 직접 입력으로 변경
-st.subheader("잠수풀 수업 시간")
-col3, col4, col5 = st.columns(3)
-with col3:
-    time_hour = st.number_input("시간", min_value=1, max_value=12, value=3)
-with col4:
-    time_minute = st.number_input("분", min_value=0, max_value=59, value=0)
-with col5:
-    time_ampm = st.selectbox("AM/PM", options=["PM", "AM"], index=0)
+# 이론수업 설정
+st.subheader("💻 이론수업 설정")
+theory_class = st.checkbox("이론수업 포함", value=False, help="이론수업이 포함된 과정인 경우 체크하세요")
 
-# 이론수업 선택 및 일정
-st.subheader("이론수업 설정")
-theory_class = st.checkbox("이론수업 포함", value=False)
-
-# 이론수업 일정 설정 (이론수업 선택 시에만 표시)
 if theory_class:
-    col6, col7, col8 = st.columns(3)
+    col6, col7, col8, col9 = st.columns(4)
     with col6:
-        theory_date = st.date_input("이론수업 날짜", value=dt_date)
+        theory_date = st.date_input("이론수업 날짜", value=dt_date, help="이론수업이 진행될 날짜를 선택하세요")
     with col7:
-        theory_hour = st.number_input("이론수업 시간", min_value=1, max_value=12, value=7)
-        theory_minute = st.number_input("이론수업 분", min_value=0, max_value=59, value=0)
+        theory_hour = st.selectbox("이론수업 시간", options=list(range(1, 13)), index=6, key="theory_hour")
     with col8:
-        theory_ampm = st.selectbox("이론수업 AM/PM", options=["PM", "AM"], index=0)
-
-name = st.text_input("교육생 이름(선택)", placeholder="예) 홍길동")
+        theory_minute = st.selectbox("이론수업 분", options=[0, 15, 30, 45], key="theory_minute")
+    with col9:
+        theory_ampm = st.selectbox("이론수업 AM/PM", options=["PM", "AM"], index=0, key="theory_ampm")
 
 # ---- 데이터 계산 ------------------------------------------------------------
 loc = LOCATIONS.get(loc_name, {})
 course_meta = COURSES.get(course, {})
 
-# 한국 형식 날짜/시간 (Windows 호환) - 여기로 이동
+# 한국 형식 날짜/시간
 weekday_kr = ["월", "화", "수", "목", "금", "토", "일"]
 dow = weekday_kr[dt_date.weekday()]
 
-# 이론수업 요일 계산 (이론수업 선택 시에만)
-if theory_class:
-    theory_weekday = weekday_kr[theory_date.weekday()]
-    theory_date_kr = f"{theory_date.month}월 {theory_date.day}일"
-
-# 시간 계산 (AM/PM 기반)
+# 시간 계산 함수들
 def convert_to_24hr(hour, ampm):
     if ampm == "PM" and hour != 12:
         return hour + 12
@@ -158,32 +147,27 @@ def convert_to_24hr(hour, ampm):
     else:
         return hour
 
-# 10분 전 시간 계산
 def calculate_arrival_time(hour, minute, ampm):
     arrival_hour = hour
     arrival_minute = minute - 10
     
-    # 분이 음수가 되는 경우 처리
     if arrival_minute < 0:
         arrival_hour -= 1
         arrival_minute += 60
     
-    # 시간이 0이 되는 경우 처리
     if arrival_hour <= 0:
         arrival_hour = 12
         ampm = "AM" if ampm == "PM" else "PM"
     
     return f"{arrival_hour:02d}:{arrival_minute:02d} {ampm}"
 
-# 시간 형식 변경 함수
 def format_time_range(hour, minute, ampm, end_hour, end_minute, end_ampm):
     return f"{ampm} {hour:02d}:{minute:02d} ~ {end_ampm} {end_hour:02d}:{end_minute:02d}"
 
-# 잠수풀 수업 시간
+# 잠수풀 수업 시간 계산
 pool_hour = convert_to_24hr(time_hour, time_ampm)
 time_str = f"{time_hour:02d}:{time_minute:02d} {time_ampm}"
 
-# 종료시간을 AM/PM 형식으로 변환
 end_hour_24 = (pool_hour + 3) % 24
 if end_hour_24 == 0:
     end_hour = 12
@@ -197,12 +181,11 @@ else:
 
 end_time_str = f"{end_hour:02d}:{time_minute:02d} {end_ampm}"
 
-# 이론수업 시간 (이론수업 선택 시)
+# 이론수업 시간 계산
 if theory_class:
     theory_hour_24 = convert_to_24hr(theory_hour, theory_ampm)
     theory_time_str = f"{theory_hour:02d}:{theory_minute:02d} {theory_ampm}"
     
-    # 이론수업 종료시간을 AM/PM 형식으로 변환
     theory_end_hour_24 = (theory_hour_24 + 2) % 24
     if theory_end_hour_24 == 0:
         theory_end_hour = 12
@@ -218,12 +201,12 @@ if theory_class:
 
 date_kr = f"{dt_date.month}월 {dt_date.day}일"
 
-# 유효기간 자동 계산 (일수 기반) - 종료일만 표시
+# 유효기간 계산
 유효기간_일 = course_meta.get("유효기간_일", 0)
 if 유효기간_일 > 0:
     만료일 = dt_date + timedelta(days=유효기간_일)
     만료일_str = f"{만료일.month}월 {만료일.day}일"
-    유효기간_표시 = f"교육소진유효기간: {만료일_str}"  # 시작일 제거, 종료일만
+    유효기간_표시 = f"교육소진유효기간: {만료일_str}"
 else:
     유효기간_표시 = ""
 
@@ -248,15 +231,15 @@ if show_details:
     if parts:
         course_line = f"({', '.join(parts)})"
 
-# 금액/빈값 안전 처리
+# 금액 처리
 fee_str = f"{fee:,}원 ({fee_type})" if isinstance(fee, (int, float)) and fee > 0 else "현장 안내"
-
-# 수강생 이름 라인
-name_line = f"수강생: {name}" if name.strip() else ""
 
 # 교육 스케줄 생성 (날짜 순서로 정렬)
 schedule_lines = []
 if theory_class:
+    theory_weekday = weekday_kr[theory_date.weekday()]
+    theory_date_kr = f"{theory_date.month}월 {theory_date.day}일"
+    
     if theory_date <= dt_date:
         # 이론수업이 먼저인 경우
         schedule_lines = [
@@ -313,9 +296,7 @@ message += f"""
 ▶ 강사 연락처
 교육강사 연락처는 교육 전 안내드립니다.
 대표번호 블루페블 02-6278-7787
-{name_line}
 
-📍 안내멘트
 {date_kr}({dow}) {arrival_time}까지 {loc.get('멘트','')}
 궁금하신 점은 언제든 문의주세요😃"""
 
@@ -323,25 +304,34 @@ if add_extra.strip():
     message += f"\n\n추가 안내: {add_extra.strip()}"
 
 # ---- 출력 UI ---------------------------------------------------------------
-st.subheader("생성된 안내문")
+st.subheader("�� 생성된 안내문")
 
-# 수정 가능한 text_area
-edited_message = st.text_area("아래 내용을 수정하거나 복사해서 사용하세요:", value=message, height=360)
+# 실시간 미리보기
+with st.expander("👀 미리보기", expanded=True):
+    st.text_area("아래 내용을 수정하거나 복사해서 사용하세요:", value=message, height=300, key="editable_message")
 
-# 수정된 내용으로 다운로드
-st.download_button(
-    label="안내문 .txt 다운로드",
-    data=edited_message.encode("utf-8"),
-    file_name=f"안내문_{dt_date.isoformat()}_{loc_name}.txt",
-    mime="text/plain"
-)
+# 다운로드 및 복사
+col10, col11 = st.columns(2)
+with col10:
+    st.download_button(
+        label="�� 안내문 다운로드 (.txt)",
+        data=message.encode("utf-8"),
+        file_name=f"안내문_{dt_date.isoformat()}_{loc_name}.txt",
+        mime="text/plain",
+        use_container_width=True
+    )
+with col11:
+    st.code(message, language="")
 
-# 수정된 내용으로 코드 블록 표시
-st.code(edited_message, language="")
+# 장소 상세 정보
+with st.expander("📍 장소 상세 정보"):
+    col12, col13 = st.columns(2)
+    with col12:
+        st.markdown(f"**주소**: {loc.get('주소','')}")
+        st.markdown(f"**링크**: {loc.get('링크','')}")
+    with col13:
+        st.markdown(f"**입장료**: {fee_str}")
+        st.markdown(f"**주의사항**: {loc.get('주의','')}")
 
-# 미리보기 카드
-with st.expander("장소 상세 미리보기"):
-    st.markdown(f"**주소**: {loc.get('주소','')}")
-    st.markdown(f"**링크**: {loc.get('링크','')}")
-    st.markdown(f"**입장료**: {fee_str}")
-    st.markdown(f"**주의사항**: {loc.get('주의','')}")
+# 사용 팁
+st.info("�� **사용 팁**: 안내문을 수정한 후 다운로드하거나 복사해서 사용하세요!")
