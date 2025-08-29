@@ -108,10 +108,31 @@ with col1:
 with col2:
     loc_name = st.selectbox("교육 장소", options=list(LOCATIONS.keys()))
     dt_date = st.date_input("교육 날짜", value=date.today())
-    time_input = st.text_input("교육 시간", value="15:00", placeholder="예) 15:00, 09:30")
+    
+    # 시간을 AM/PM으로 선택
+    col3, col4 = st.columns(2)
+    with col3:
+        time_hour = st.selectbox("시간", options=list(range(1, 13)), index=2)  # 3시 = index 2
+    with col4:
+        time_minute = st.selectbox("분", options=[0, 15, 30, 45])
+    
+    # AM/PM 선택
+    time_ampm = st.selectbox("AM/PM", options=["PM", "AM"], index=0)
 
-# 이론수업 선택
+# 이론수업 선택 및 일정
 theory_class = st.checkbox("이론수업 포함", value=False)
+
+# 이론수업 일정 설정 (이론수업 선택 시에만 표시)
+if theory_class:
+    col5, col6 = st.columns(2)
+    with col5:
+        theory_date = st.date_input("이론수업 날짜", value=dt_date)
+        theory_hour = st.selectbox("이론수업 시간", options=list(range(1, 13)), index=6)  # 7시 = index 6
+        theory_minute = st.selectbox("이론수업 분", options=[0, 15, 30, 45])
+    with col6:
+        theory_ampm = st.selectbox("이론수업 AM/PM", options=["PM", "AM"], index=0)
+        theory_weekday = weekday_kr[theory_date.weekday()]
+        theory_date_kr = f"{theory_date.month}월 {theory_date.day}일"
 
 name = st.text_input("교육생 이름(선택)", placeholder="예) 홍길동")
 
@@ -123,24 +144,44 @@ course_meta = COURSES.get(course, {})
 weekday_kr = ["월", "화", "수", "목", "금", "토", "일"]
 dow = weekday_kr[dt_date.weekday()]
 
-# 시간 입력 처리 및 종료시간 계산
-try:
-    # 입력된 시간을 파싱 (HH:MM 형식)
-    time_parts = time_input.split(":")
-    if len(time_parts) == 2:
-        hour = int(time_parts[0])
-        minute = int(time_parts[1])
-        time_str = f"{hour:02d}:{minute:02d}"
-        
-        # 종료시간 계산 (시작시간 + 3시간)
-        end_hour = (hour + 3) % 24
-        end_time_str = f"{end_hour:02d}:{minute:02d}"
+# 시간 계산 (AM/PM 기반)
+def convert_to_24hr(hour, ampm):
+    if ampm == "PM" and hour != 12:
+        return hour + 12
+    elif ampm == "AM" and hour == 12:
+        return 0
     else:
-        time_str = time_input
-        end_time_str = "18:00"  # 기본값
-except:
-    time_str = time_input
-    end_time_str = "18:00"  # 기본값
+        return hour
+
+# 10분 전 시간 계산
+def calculate_arrival_time(hour, minute, ampm):
+    arrival_hour = hour
+    arrival_minute = minute - 10
+    
+    # 분이 음수가 되는 경우 처리
+    if arrival_minute < 0:
+        arrival_hour -= 1
+        arrival_minute += 60
+    
+    # 시간이 0이 되는 경우 처리
+    if arrival_hour <= 0:
+        arrival_hour = 12
+        ampm = "AM" if ampm == "PM" else "PM"
+    
+    return f"{arrival_hour:02d}:{arrival_minute:02d} {ampm}"
+
+# 잠수풀 수업 시간
+pool_hour = convert_to_24hr(time_hour, time_ampm)
+time_str = f"{time_hour:02d}:{time_minute:02d} {time_ampm}"
+end_hour = (pool_hour + 3) % 24
+end_time_str = f"{end_hour:02d}:{time_minute:02d}"
+
+# 이론수업 시간 (이론수업 선택 시)
+if theory_class:
+    theory_hour_24 = convert_to_24hr(theory_hour, theory_ampm)
+    theory_time_str = f"{theory_hour:02d}:{theory_minute:02d} {theory_ampm}"
+    theory_end_hour = (theory_hour_24 + 2) % 24
+    theory_end_time_str = f"{theory_end_hour:02d}:{theory_minute:02d}"
 
 date_kr = f"{dt_date.month}월 {dt_date.day}일"
 
@@ -183,10 +224,14 @@ name_line = f"수강생: {name}" if name.strip() else ""
 # 교육 스케줄 생성
 schedule_lines = []
 if theory_class:
-    schedule_lines.append(f"- 이론수업 {time_str}~{end_time_str} (자택/Zoom)")
-schedule_lines.append(f"- 잠수풀 수업 {time_str}~{end_time_str}")
+    schedule_lines.append(f"- 이론수업 {theory_date_kr}({theory_weekday}) {theory_time_str}~{theory_end_time_str} (자택/Zoom)")
+
+schedule_lines.append(f"- 잠수풀 수업 {date_kr}({dow}) {time_str}~{end_time_str}")
 
 schedule_text = "\n".join(schedule_lines)
+
+# 도착 시간 계산 (10분 전)
+arrival_time = calculate_arrival_time(time_hour, time_minute, time_ampm)
 
 # ---- 안내문 생성 ------------------------------------------------------------
 message = f"""▶ 신청레벨
@@ -227,7 +272,8 @@ message += f"""
 대표번호 블루페블 02-6278-7787
 {name_line}
 
-{date_kr}({dow}) {time_str}에 {loc.get('멘트','')}
+📍 안내멘트
+{date_kr}({dow}) {arrival_time}까지 {loc.get('멘트','')}
 궁금하신 점은 언제든 문의주세요😃"""
 
 if add_extra.strip():
