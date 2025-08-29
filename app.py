@@ -154,7 +154,7 @@ def calculate_arrival_time(hour, minute, ampm):
     if arrival_hour <= 0:
         arrival_hour = 12
         ampm = "AM" if ampm == "PM" else "PM"
-    return f"{arrival_hour:02d}:{arrival_minute:02d} {ampm}"
+    return f"{ampm} {arrival_hour:02d}:{arrival_minute:02d}"
 
 def format_time_range(hour, minute, ampm, end_hour, end_minute, end_ampm):
     return f"{ampm} {hour:02d}:{minute:02d} ~ {end_ampm} {end_hour:02d}:{end_minute:02d}"
@@ -270,6 +270,7 @@ if add_extra.strip():
 st.subheader("생성된 안내문")
 edited_message = st.text_area("아래 내용을 수정하거나 복사해서 사용하세요:", value=message, height=360)
 st.code(edited_message, language="")
+
 
 
 
