@@ -16,45 +16,67 @@ COURSES = {
 }
 
 LOCATIONS = {
+    "올팍": {
+        "주소": "서울 송파구 올림픽로 424",
+        "링크": "https://cafe.naver.com/bluepebble/620",
+        "입장료_평일": 18000,
+        "입장료_주말": 22000,
+        "주의": "매우 크고 복잡합니다 꼭! 오시기 전에 링크 확인해주세요",
+        "멘트": "올림픽공원 수영장 잠수풀 입구에서 뵙겠습니다."
+    },
     "잠실풀": {
         "주소": "서울 송파구 올림픽로 25",
         "링크": "https://cafe.naver.com/bluepebble/259",
-        "입장료": 15000,
+        "입장료_평일": 15000,
+        "입장료_주말": 15000,
         "주의": "예약후 취소가 어렵습니다.",
         "멘트": "잠실 종합운동장 제2수영장 입구에서 뵙겠습니다."
     },
     "송도풀": {
         "주소": "인천 연수구 인천신항대로892번길 40 인천환경공단 송도스포츠파크",
         "링크": "https://ssp.eco-i.or.kr/sub/contents/default_page.asp?mNo=MA070000000",
-        "입장료": 20000,
+        "입장료_평일": 5000,
+        "입장료_주말": 18000,
         "주의": "국립 운영(주말 수업 어려움), 동시입장 필요",
         "멘트": "송도 잠수풀 로비에서 강사님을 만나시면 됩니다."
     },
     "수원풀": {
         "주소": "경기 수원시 팔달구 창룡대로210번길 41 (수원 스포츠아일랜드)",
         "링크": "https://www.worldcupdivingpool.com/Map",
-        "입장료": 15000,
+        "입장료_평일": 18000,
+        "입장료_주말": 18000,
         "주의": "입장 시 주차 3시간 할인 등록",
         "멘트": "수영장 입구가 아닌 스쿠버풀 입구에서 뵙겠습니다."
+    },
+    "성남풀": {
+        "주소": "경기 성남시 중원구 제일로 60 성남종합스포츠센터 B동 지하2층",
+        "링크": "https://cafe.naver.com/bluepebble/633",
+        "입장료_평일": 15000,
+        "입장료_주말": 20000,
+        "주의": "지하2층 잠수풀 입구에서 뵙겠습니다.",
+        "멘트": "성남 아쿠아라인 잠수풀 입구에서 뵙겠습니다."
     },
     "K26": {
         "주소": "경기 가평군 청평면 고재길 262-57",
         "링크": "https://k-26.com/intro/index3.php",
-        "입장료": 25000,
+        "입장료_평일": 33000,
+        "입장료_주말": 55000,
         "주의": "지각 시 결석 처리될 수 있습니다.",
         "멘트": "가평 K26 1층 로비에서 뵙겠습니다."
     },
     "딥스테이션": {
         "주소": "경기 용인시 처인구 포곡읍 성산로 523 딥스테이션",
         "링크": "https://deepstation.kr/theme/basic/sub/location.php",
-        "입장료": 22000,
+        "입장료_평일": 48000,
+        "입장료_주말": 66000,
         "주의": "현장 규정 준수",
         "멘트": "딥스테이션 2층에서 뵙겠습니다."
     },
     "파라다이브": {
         "주소": "경기도 시흥시 거북섬중앙로 1 1동3층 303호",
         "링크": "https://paradive.co.kr/About/location.php",
-        "입장료": 25000,
+        "입장료_평일": 45000,
+        "입장료_주말": 67000,
         "주의": "평일 5m존만 가능",
         "멘트": "파라다이브 3층 로비에서 뵙겠습니다."
     },
@@ -62,7 +84,9 @@ LOCATIONS = {
 
 INSTRUCTORS = [
     "김혜진", "함현석", "이주희", "신가은", "박주흠",
-    "노진아", "선동진", "이동규", "차진명"
+    "노진아", "선동진", "이동규", "차진명", "김민현",
+    "조아라", "육소영", "노진아", "주선형", "김동희",
+    "표정승"
 ]
 
 DEFAULT_ITEMS = "수영복, 수영모, 수건, 세면도구"
@@ -99,6 +123,15 @@ dow = weekday_kr[dt_date.weekday()]
 time_str = dt_time.strftime("%H:%M")
 date_kr = f"{dt_date.month}월 {dt_date.day}일"
 
+# 평일/주말 구분
+is_weekend = dow in ["토", "일"]
+if is_weekend:
+    fee = loc.get("입장료_주말", 0)
+    fee_type = "주말"
+else:
+    fee = loc.get("입장료_평일", 0)
+    fee_type = "평일"
+
 # 보기용 구성/유효기간
 course_line = ""
 if show_details:
@@ -113,8 +146,7 @@ if show_details:
         course_line = f"({', '.join(parts)})"
 
 # 금액/빈값 안전 처리
-fee = loc.get("입장료", 0)
-fee_str = f"{fee:,}원" if isinstance(fee, (int, float)) and fee > 0 else "현장 안내"
+fee_str = f"{fee:,}원 ({fee_type})" if isinstance(fee, (int, float)) and fee > 0 else "현장 안내"
 
 # 수강생 이름 라인
 name_line = f"수강생: {name}" if name.strip() else ""
@@ -158,6 +190,7 @@ st.code(message, language="")  # 복사 버튼 제공
 st.download_button(
     label="안내문 .txt 다운로드",
     data=message.encode("utf-8"),
+    file_name=f"안내문_{dt_date.isoformat()}_{loc_name}.txt",
     file_name=f"안내문_{dt_date.isoformat()}_{loc_name}.txt",
     mime="text/plain"
 )
