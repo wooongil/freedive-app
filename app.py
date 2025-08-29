@@ -236,6 +236,10 @@ if loc_name == "올림픽수영장 잠수풀":
     message += f"""
 주의사항: {loc.get('주의','')}"""
 
+elif loc_name == "송도풀":
+    message += f"""
+주의사항: 신분증 또는 맡기실 거 가지고 오세요! ({loc.get('주의','')})"""
+
 message += f"""
 
 ▶ 준비물
@@ -264,5 +268,6 @@ if add_extra.strip():
 st.subheader("생성된 안내문")
 edited_message = st.text_area("아래 내용을 수정하거나 복사해서 사용하세요:", value=message, height=360)
 st.code(edited_message, language="")
+
 
 
