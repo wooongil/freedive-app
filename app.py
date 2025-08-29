@@ -108,31 +108,31 @@ with col1:
 with col2:
     loc_name = st.selectbox("교육 장소", options=list(LOCATIONS.keys()))
     dt_date = st.date_input("교육 날짜", value=date.today())
-    
-    # 시간을 AM/PM으로 선택
-    col3, col4 = st.columns(2)
-    with col3:
-        time_hour = st.selectbox("시간", options=list(range(1, 13)), index=2)  # 3시 = index 2
-    with col4:
-        time_minute = st.selectbox("분", options=[0, 15, 30, 45])
-    
-    # AM/PM 선택
+
+# 시간을 AM/PM으로 선택
+st.subheader("잠수풀 수업 시간")
+col3, col4, col5 = st.columns(3)
+with col3:
+    time_hour = st.selectbox("시간", options=list(range(1, 13)), index=2)  # 3시 = index 2
+with col4:
+    time_minute = st.selectbox("분", options=[0, 15, 30, 45])
+with col5:
     time_ampm = st.selectbox("AM/PM", options=["PM", "AM"], index=0)
 
 # 이론수업 선택 및 일정
+st.subheader("이론수업 설정")
 theory_class = st.checkbox("이론수업 포함", value=False)
 
 # 이론수업 일정 설정 (이론수업 선택 시에만 표시)
 if theory_class:
-    col5, col6 = st.columns(2)
-    with col5:
+    col6, col7, col8 = st.columns(3)
+    with col6:
         theory_date = st.date_input("이론수업 날짜", value=dt_date)
+    with col7:
         theory_hour = st.selectbox("이론수업 시간", options=list(range(1, 13)), index=6)  # 7시 = index 6
         theory_minute = st.selectbox("이론수업 분", options=[0, 15, 30, 45])
-    with col6:
+    with col8:
         theory_ampm = st.selectbox("이론수업 AM/PM", options=["PM", "AM"], index=0)
-        theory_weekday = weekday_kr[theory_date.weekday()]
-        theory_date_kr = f"{theory_date.month}월 {theory_date.day}일"
 
 name = st.text_input("교육생 이름(선택)", placeholder="예) 홍길동")
 
@@ -140,9 +140,14 @@ name = st.text_input("교육생 이름(선택)", placeholder="예) 홍길동")
 loc = LOCATIONS.get(loc_name, {})
 course_meta = COURSES.get(course, {})
 
-# 한국 형식 날짜/시간 (Windows 호환)
+# 한국 형식 날짜/시간 (Windows 호환) - 여기로 이동
 weekday_kr = ["월", "화", "수", "목", "금", "토", "일"]
 dow = weekday_kr[dt_date.weekday()]
+
+# 이론수업 요일 계산 (이론수업 선택 시에만)
+if theory_class:
+    theory_weekday = weekday_kr[theory_date.weekday()]
+    theory_date_kr = f"{theory_date.month}월 {theory_date.day}일"
 
 # 시간 계산 (AM/PM 기반)
 def convert_to_24hr(hour, ampm):
@@ -173,15 +178,39 @@ def calculate_arrival_time(hour, minute, ampm):
 # 잠수풀 수업 시간
 pool_hour = convert_to_24hr(time_hour, time_ampm)
 time_str = f"{time_hour:02d}:{time_minute:02d} {time_ampm}"
-end_hour = (pool_hour + 3) % 24
-end_time_str = f"{end_hour:02d}:{time_minute:02d}"
+
+# 종료시간을 AM/PM 형식으로 변환
+end_hour_24 = (pool_hour + 3) % 24
+if end_hour_24 == 0:
+    end_hour = 12
+    end_ampm = "AM"
+elif end_hour_24 > 12:
+    end_hour = end_hour_24 - 12
+    end_ampm = "PM"
+else:
+    end_hour = end_hour_24
+    end_ampm = "AM"
+
+end_time_str = f"{end_hour:02d}:{time_minute:02d} {end_ampm}"
 
 # 이론수업 시간 (이론수업 선택 시)
 if theory_class:
     theory_hour_24 = convert_to_24hr(theory_hour, theory_ampm)
     theory_time_str = f"{theory_hour:02d}:{theory_minute:02d} {theory_ampm}"
-    theory_end_hour = (theory_hour_24 + 2) % 24
-    theory_end_time_str = f"{theory_end_hour:02d}:{theory_minute:02d}"
+    
+    # 이론수업 종료시간을 AM/PM 형식으로 변환
+    theory_end_hour_24 = (theory_hour_24 + 2) % 24
+    if theory_end_hour_24 == 0:
+        theory_end_hour = 12
+        theory_end_ampm = "AM"
+    elif theory_end_hour_24 > 12:
+        theory_end_hour = theory_end_hour_24 - 12
+        theory_end_ampm = "PM"
+    else:
+        theory_end_hour = theory_end_hour_24
+        theory_end_ampm = "AM"
+    
+    theory_end_time_str = f"{theory_end_hour:02d}:{theory_minute:02d} {theory_end_ampm}"
 
 date_kr = f"{dt_date.month}월 {dt_date.day}일"
 
