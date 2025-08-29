@@ -252,7 +252,7 @@ message += f"""
 대표번호 블루페블 02-6278-7787
 
 {date_kr}({dow}) {arrival_time}까지 {loc.get('멘트','')}
-궁금하신 점은 언제든 문의주세요"""
+궁금하신 점은 언제든 문의주세요😃"""
 
 if add_extra.strip():
     message += f"""
@@ -264,3 +264,4 @@ if add_extra.strip():
 st.subheader("생성된 안내문")
 edited_message = st.text_area("아래 내용을 수정하거나 복사해서 사용하세요:", value=message, height=360)
 st.code(edited_message, language="")
+
