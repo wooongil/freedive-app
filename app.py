@@ -262,11 +262,7 @@ message = f"""▶ 신청레벨
 {course_line}
 
 ▶ 교육스케줄
-{schedule_text}"""
-
-# 이론수업이 아닌 경우에만 교육장소 표시
-if not theory_class:
-    message += f"""
+{schedule_text}
 
 ▶ 교육장소
 {loc_name} ({loc.get('주소','')})
@@ -298,7 +294,10 @@ message += f"""
 궁금하신 점은 언제든 문의주세요"""
 
 if add_extra.strip():
-    message += f"\n\n추가 안내: {add_extra.strip()}"
+    message += f"""
+
+▶ 추가 안내
+{add_extra.strip()}"
 
 # ---- 출력 UI ---------------------------------------------------------------
 st.subheader("생성된 안내문")
@@ -308,4 +307,5 @@ edited_message = st.text_area("아래 내용을 수정하거나 복사해서 사
 
 # 수정된 내용으로 코드 블록 표시
 st.code(edited_message, language="")
+
 
