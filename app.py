@@ -209,8 +209,10 @@ if add_extra.strip():
 
 # ---- 출력 UI ---------------------------------------------------------------
 st.subheader("생성된 안내문")
-# 수정 가능한 text_area로 변경
-edited_message = st.text_area("아래 내용을 수정하거나 복사해서 사용하세요", value=message, height=360)
+
+# 수정 가능한 text_area
+st.write("아래 내용을 수정하거나 복사해서 사용하세요:")
+edited_message = st.text_area("", value=message, height=360, key="editable_message", label_visibility="collapsed")
 
 # 수정된 내용으로 다운로드
 st.download_button(
@@ -229,6 +231,7 @@ with st.expander("장소 상세 미리보기"):
     st.markdown(f"**링크**: {loc.get('링크','')}")
     st.markdown(f"**입장료**: {fee_str}")
     st.markdown(f"**주의사항**: {loc.get('주의','')}")
+
 
 
 
